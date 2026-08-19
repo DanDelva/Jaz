@@ -105,9 +105,9 @@
 
     <!-- Animación de Introducción -->
     <div class="contenedor-texto" id="intro-container">
-        <div id="texto1" class="linea-texto">Quería darte estos girasoles porque ya casi no se encuentran,</div>
-        <div id="texto2" class="linea-texto">y esa misma rareza me hizo pensar en ti.</div>
-        <div id="texto3" class="linea-texto">Son tan especiales como este recuerdo...</div>
+        <div id="texto1" class="linea-texto">Mientras te diviertes</div>
+        <div id="texto2" class="linea-texto">Deje una puerta abierta</div>
+        <div id="texto3" class="linea-texto">Por si vienes...</div>
     </div>
 
     <!-- Aquí irá tu contenido real (fotos, girasoles, etc.) -->
@@ -132,20 +132,27 @@
         // Lógica inteligente de interacción para saltarse el bloqueo de autoplay de los navegadores.
         // Si el usuario hace click/toca en cualquier parte de la pantalla, se registra el permiso.
         let interactuado = false;
+        
+        const intentarDesmutarYJugar = () => {
+            const video = document.getElementById('video-recuerdo');
+            if (video) {
+                video.volume = 1.0; // Iniciar con todo el volumen
+                video.muted = false; // Desmutear
+                video.play().then(() => {
+                    // Si se pudo reproducir con sonido, quitamos los listeners de interacción
+                    document.removeEventListener('click', registrarInteraccion);
+                    document.removeEventListener('touchstart', registrarInteraccion);
+                }).catch(e => {
+                    console.log("No se pudo reproducir con sonido aún:", e);
+                });
+            }
+        };
+
         const registrarInteraccion = () => {
             interactuado = true;
-            const video = document.getElementById('video-recuerdo');
-            if (video && contenidoPrincipal.style.display === 'block') {
-                if (video.paused) {
-                    video.muted = false;
-                    video.play().catch(e => console.log("Error al reproducir con sonido:", e));
-                } else if (video.muted) {
-                    video.muted = false; // Desmutear si ya estaba reproduciéndose en silencio
-                }
+            if (contenidoPrincipal.style.display === 'block') {
+                intentarDesmutarYJugar();
             }
-            // Retirar los listeners una vez registrada la interacción
-            document.removeEventListener('click', registrarInteraccion);
-            document.removeEventListener('touchstart', registrarInteraccion);
         };
         document.addEventListener('click', registrarInteraccion);
         document.addEventListener('touchstart', registrarInteraccion);
@@ -189,9 +196,13 @@
                                         // Intentar reproducir el video automáticamente al mostrar el contenido
                                         const video = document.getElementById('video-recuerdo');
                                         if (video) {
-                                            // Intentar con audio primero.
-                                            // Si el navegador lo bloquea, lo silenciamos automáticamente para forzar el inicio del vídeo.
-                                            video.play().catch(error => {
+                                            video.volume = 1.0; // Iniciar con todo el volumen
+                                            video.muted = false; // Intentar iniciar desmutado
+                                            video.play().then(() => {
+                                                // Si se reproduce con sonido con éxito, quitar listeners
+                                                document.removeEventListener('click', registrarInteraccion);
+                                                document.removeEventListener('touchstart', registrarInteraccion);
+                                            }).catch(error => {
                                                 console.log("El navegador bloqueó la reproducción con sonido. Forzando autoplay en silencio...");
                                                 video.muted = true;
                                                 video.play().catch(err => {
